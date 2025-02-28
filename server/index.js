@@ -1,12 +1,21 @@
-const ws = require("ws");
+import { createServer } from "http";
+import { Server } from "socket.io";
 
-const server = new ws.Server({ port: "3000" });
+const httpServer = createServer();
+const io = new Server(httpServer, {
+  cors: {
+    origin:
+      process.env.NODE_ENV === "production" ? false : ["http://localhost:5500"],
+  },
+});
+io.on("connection", (socket) => {
+  console.log(`user ${socket.id} connected`);
 
-server.on("connection", (socket) => {
-  socket.on("message", (message) => {
-    const b = Buffer.from(message);
-    console.log(b.toString());
+  socket.on("message", (data) => {
+    console.log(data);
 
-    socket.send(`${message}`);
+    io.emit("message", `${socket.id} : ${data}`);
   });
 });
+
+httpServer.listen(3500, () => console.log("listening on port 3500"));
